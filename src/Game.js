@@ -3,10 +3,6 @@ import './game.css'
 
 class Square extends Component {
 
-    constructor(props) {
-        super(props)
-    }
-
     render() {
         return (
             <div className="square"
@@ -74,10 +70,9 @@ export default class Game extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            started: false,
+            gamestage: 'notready',
             turn: 0,
-            ready: false,
-            currentShip: 0,
+            currentShip: -1,
             playerMatrix: [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -124,92 +119,236 @@ export default class Game extends Component {
                 ]
         }
         this.startPlacement = this.startPlacement.bind(this)
-        this.handleClick = this.handleClick.bind(this)
+        this.placeShip = this.placeShip.bind(this)
+        this.rotateShip = this.rotateShip.bind(this)
     }
 
-    handleClick = (e) => {
+    placeShip = (e) => {
         e.stopPropagation()
         let position = e.target.getAttribute('index')
-        let squares = e.target.parentNode.childNodes
+
         if (this.state.ships[this.state.currentShip].rotation === 'vertical') {
+            let newMatrix = this.state.playerMatrix
             let multiplier
+            let affectedsquares = []
+
             for (let i = 0; i < this.state.ships[this.state.currentShip].size; i++) {
-                let newMatrix = this.state.playerMatrix
                 multiplier = i * 9
-                newMatrix[multiplier + parseInt(position)] = 1
+                affectedsquares.push(multiplier + parseInt(position))
+            }
+
+            let nums = [81, 82, 83, 84, 85, 86, 87, 88, 89, 90]
+            let newaff = affectedsquares.slice(0, -1)
+            let allowed = true
+            for (let i = 0; i < nums.length; i++) {
+                if (newaff.includes(nums[i])) {
+                    allowed = false
+                }
+            }
+
+            affectedsquares.forEach(sqr => {
+                if (newMatrix[sqr] === 1) {
+                    allowed = false
+                }
+            })
+
+            if (allowed === true) {
+                affectedsquares.forEach(sqr => {
+                    newMatrix[sqr] = 1
+                })
                 this.setState({
                     playerMatrix: newMatrix
-                })
+                }, this.updateShips)
             }
         } else {
+            let newMatrix = this.state.playerMatrix
+
+            let affectedsquares = []
             for (let i = 0; i < this.state.ships[this.state.currentShip].size; i++) {
-                let newMatrix = this.state.playerMatrix
-                newMatrix = newMatrix[i + parseInt(position)] = 1
+                affectedsquares.push(i + parseInt(position))
+            }
+
+            let nums = [9, 18, 27, 36, 45, 54, 63, 72, 81]
+            let newaff = affectedsquares.slice(1)
+            let allowed = true
+            for (let i = 0; i < nums.length; i++) {
+                if (newaff.includes(nums[i]) || newaff[newaff.length - 1] >= 90) {
+                    allowed = false
+                }
+            }
+
+            affectedsquares.forEach(sqr => {
+                if (newMatrix[sqr] === 1) {
+                    allowed = false
+                }
+            })
+
+            if (allowed === true) {
+                affectedsquares.forEach(sqr => {
+                    newMatrix[sqr] = 1
+                })
                 this.setState({
                     playerMatrix: newMatrix
-                })
-                console.log(this.state.playerMatrix)
+                }, this.updateShips)
+
             }
         }
+    }
+
+    updateShips() {
 
         let newShips = Object.assign({}, this.state.ships);
         newShips[this.state.currentShip].placed = true
-        var result = Object.keys(newShips).map(function (key) {
-            return [Number(key), newShips[key]];
+        let result = Object.keys(newShips).map(i => {
+            return newShips[i]
         })
-        console.log(result)
         this.setState({
             ships: result
         }, this.runPlacement)
+
     }
 
     handleHover = (e) => {
         e.stopPropagation()
-        let position = e.target.getAttribute('index')
-        let squares = e.target.parentNode.childNodes
-        if (this.state.ships[this.state.currentShip].rotation === 'vertical') {
-            let multiplier
-            for (let i = 0; i < this.state.ships[this.state.currentShip].size; i++) {
-                multiplier = i * 9
-                squares[multiplier + parseInt(position)].style.background = 'red'
-            }
-        } else {
-            for (let i = 0; i < this.state.ships[this.state.currentShip].size; i++) {
-                squares[i + parseInt(position)].style.background = 'red'
+        if (this.state.gamestage === 'shipplacement') {
+            let position = e.target.getAttribute('index')
+            let squares = e.target.parentNode.childNodes
+            if (this.state.ships[this.state.currentShip].rotation === 'vertical') {
+                let multiplier
+                let affectedsquares = []
+
+                for (let i = 0; i < this.state.ships[this.state.currentShip].size; i++) {
+                    multiplier = i * 9
+                    affectedsquares.push(multiplier + parseInt(position))
+                }
+
+                let nums = [81, 82, 83, 84, 85, 86, 87, 88, 89, 90]
+                let newaff = affectedsquares.slice(0, -1)
+                let allowed = true
+                for (let i = 0; i < nums.length; i++) {
+                    if (newaff.includes(nums[i])) {
+                        allowed = false
+                    }
+                }
+                if (allowed === true) {
+                    affectedsquares.forEach(sqr => {
+                        squares[sqr].style.background = 'green'
+                    })
+                }
+            } else {
+                let affectedsquares = []
+                for (let i = 0; i < this.state.ships[this.state.currentShip].size; i++) {
+                    affectedsquares.push(i + parseInt(position))
+                }
+
+                let nums = [9, 18, 27, 36, 45, 54, 63, 72, 81]
+                let newaff = affectedsquares.slice(-1)
+                let allowed = true
+                for (let i = 0; i < nums.length; i++) {
+                    if (newaff.includes(nums[i]) || newaff[newaff.length - 1] >= 90) {
+                        allowed = false
+                    }
+                }
+                if (allowed === true) {
+                    affectedsquares.forEach(sqr => {
+                        squares[sqr].style.background = 'green'
+                    })
+
+                }
             }
         }
     }
 
     handleLeaveHover = (e) => {
         e.stopPropagation()
-        let position = e.target.getAttribute('index')
-        let squares = e.target.parentNode.childNodes
-        if (this.state.ships[this.state.currentShip].rotation === 'vertical') {
-            let multiplier
-            for (let i = 0; i < this.state.ships[this.state.currentShip].size; i++) {
-                multiplier = i * 9
-                squares[multiplier + parseInt(position)].style.background = ''
-            }
-        } else {
-            for (let i = 0; i < this.state.ships[this.state.currentShip].size; i++) {
-                squares[i + parseInt(position)].style.background = ''
+        if (this.state.gamestage === 'shipplacement') {
+            let position = e.target.getAttribute('index')
+            let squares = e.target.parentNode.childNodes
+            if (this.state.ships[this.state.currentShip].rotation === 'vertical') {
+                let multiplier
+                let affectedsquares = []
+                
+                for (let i = 0; i < this.state.ships[this.state.currentShip].size; i++) {
+                    multiplier = i * 9
+                    affectedsquares.push(multiplier + parseInt(position))
+                }
+
+                let nums = [81, 82, 83, 84, 85, 86, 87, 88, 89, 90]
+                let newaff = affectedsquares.slice(0, -1)
+                let allowed = true
+                for (let i = 0; i < nums.length; i++) {
+                    if (newaff.includes(nums[i])) {
+                        allowed = false
+                    }
+                }
+
+                if (allowed === true) {
+                    affectedsquares.forEach(sqr => {
+                        squares[sqr].style.background = ''
+                    })
+                }
+            } else {
+                let affectedsquares = []
+                for (let i = 0; i < this.state.ships[this.state.currentShip].size; i++) {
+                    affectedsquares.push(i + parseInt(position))
+                }
+
+                let nums = [9, 18, 27, 36, 45, 54, 63, 72, 81]
+                let newaff = affectedsquares.slice(1)
+                let allowed = true
+                for (let i = 0; i < nums.length; i++) {
+                    if (newaff.includes(nums[i]) || newaff[newaff.length - 1] >= 90)
+                        allowed = false
+                }
+                console.log(allowed)
+                if (allowed === true) {
+                    affectedsquares.forEach(sqr => {
+                        squares[sqr].style.background = ''
+                    })
+
+                }
             }
         }
     }
 
     startPlacement = (e) => {
+        this.setState({
+            gamestage: 'shipplacement'
+        })
         this.runPlacement()
     }
 
     runPlacement() {
-        console.log(this.state.ships)
-        let ship = this.state.ships.find(ship => {
-            return ship.placed === false
+        let placed = []
+        for (let i = 0; i < this.state.playerMatrix.length; i++) {
+            if (this.state.playerMatrix[i] === 1) {
+                placed.push(i)
+            }
+        }
+        let squares = document.querySelectorAll('.player .square')
+        placed.forEach(pos => {
+            squares[pos].classList.add('placed')
         })
-        let index = this.state.ships.indexOf(ship)
         this.setState({
-            currentShip: index
+            currentShip: this.state.currentShip + 1
         })
+        if (this.state.currentShip >= this.state.ships.length - 1) {
+            this.setState({
+                gamestage: 'ready'
+            })
+        }
+    }
+
+    rotateShip() {
+        let newShips = Object.assign(this.state.ships);
+        switch (newShips[this.state.currentShip].rotation) {
+            case 'vertical':
+                newShips[this.state.currentShip].rotation = 'horizontal'
+                break
+            case 'horizontal':
+                newShips[this.state.currentShip].rotation = 'vertical'
+                break
+        }
     }
 
     render() {
@@ -218,8 +357,9 @@ export default class Game extends Component {
         this.state.started ? info = (<div>test</div>)
             : info = (
                 <div className="not_ready">
-                    <button disabled={!this.state.ready} className="start">Start Game</button>
-                    <button onClick={this.startPlacement} className="start">Place ships</button>
+                    <button disabled={this.state.gamestage !== 'ready'} className="start">Start Game</button>
+                    <button disabled={this.state.gamestage !== 'notready'} onClick={this.startPlacement}>Place ships</button>
+                    <button disabled={this.state.gamestage !== 'shipplacement'} onClick={this.rotateShip}>Rotate ship</button>
                 </div>
             )
 
@@ -232,7 +372,7 @@ export default class Game extends Component {
                 <PlayerField
                     handleHover={this.handleHover}
                     handleLeaveHover={this.handleLeaveHover}
-                    handleClick={this.handleClick} />
+                    handleClick={this.placeShip} />
             </div>
         );
     }
