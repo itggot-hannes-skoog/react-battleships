@@ -396,6 +396,7 @@ export default class Game extends Component {
             case 'horizontal':
                 newShips[this.state.currentShip].rotation = 'vertical'
                 break
+            default:
         }
     }
 
@@ -410,39 +411,102 @@ export default class Game extends Component {
 
     placeNPCShips() {
         let ships = this.state.NPCships
+        let matrix = this.state.NPCMatrix
         ships.forEach(ship => {
-            let rand = Math.random()
-            let position = rand * this.state.NPCMatrix.length
-            position = position.toFixed()
-            let rotation = Math.round(rand)
-            ship.rotation = rotation === 0 ? 'horizontal' : 'vertical'
-            let squares = []
-            if (ship.rotation === 'horizontal') {
-                for (let i = 0; i < ship.size; i++) {
-                    squares.push(parseInt(position) + i)
+            let rotation = Math.round(Math.random())
+            if (rotation === 0) {
+                let allowed = false
+
+                while (allowed === false) {
+                    let squares = this.generateHorizontalShip(ship)
+
+                    let nums = [9, 18, 27, 36, 45, 54, 63, 72, 81]
+                    let newaff = squares.slice(1)
+                    allowed = true
+                    for (let i = 0; i < nums.length; i++) {
+                        if (newaff.includes(nums[i]) || newaff[newaff.length - 1] >= 90) {
+                            allowed = false
+                        }
+                    }
+                    for (let i = 0; i < squares.length; i++) {
+                        if (matrix[squares[i]] === 1) {
+                            allowed = false
+                        }
+                    }
+
+                    if (allowed === true) {
+                        squares.forEach(sqr => {
+                            matrix[sqr] = 1
+                        })
+                    }
                 }
+
             } else {
-                let multiplier
-                for (let i = 0; i < ship.size; i++) {
-                    multiplier = i * 9
-                    squares.push(multiplier + parseInt(position))
+                let allowed = false
+
+                while (allowed === false) {
+                    let squares = this.generateVerticalShip(ship)
+
+                    let nums = [9, 18, 27, 36, 45, 54, 63, 72, 81]
+                    let newaff = squares.slice(1)
+                    allowed = true
+                    for (let i = 0; i < nums.length; i++) {
+                        if (newaff.includes(nums[i]) || newaff[newaff.length - 1] >= 90) {
+                            allowed = false
+                        }
+                    }
+                    for (let i = 0; i < squares.length; i++) {
+                        if (matrix[squares[i]] === 1) {
+                            allowed = false
+                        }
+                    }
+
+                    if (allowed === true) {
+                        squares.forEach(sqr => {
+                            matrix[sqr] = 1
+                        })
+                    }
                 }
             }
-            console.log(squares)
+
         })
+    }
+
+    generateHorizontalShip(ship) {
+        let rand = Math.random()
+        let position = rand * this.state.NPCMatrix.length
+        position = position.toFixed()
+        let squares = []
+
+        for (let i = 0; i < ship.size; i++) {
+            squares.push(parseInt(position) + i)
+        }
+        return squares
+    }
+
+    generateVerticalShip(ship) {
+        let rand = Math.random()
+        let position = rand * this.state.NPCMatrix.length
+        position = position.toFixed()
+        let squares = []
+        let multiplier
+
+        for (let i = 0; i < ship.size; i++) {
+            multiplier = i * 9
+            squares.push(multiplier + parseInt(position))
+        }
+        return squares
     }
 
     render() {
 
-        let info
-        this.state.started ? info = (<div>test</div>)
-            : info = (
+        let info = (
                 <div className="not_ready">
                     <button disabled={this.state.gamestage !== 'notready'} onClick={this.startPlacement}>Place ships</button>
                     <button disabled={this.state.gamestage !== 'shipplacement'} onClick={this.rotateShip}>Rotate ship</button>
                     <button /* disabled={this.state.gamestage !== 'ready'} */ className="start" onClick={this.startGame}>Start Game</button>
                     {this.state.gamestage === 'shipplacement' ? (
-                        <div class="current_ship">
+                        <div className="current_ship">
                             <h1>{this.state.playerships[this.state.currentShip].name}</h1>
                             <h3>{this.state.playerships[this.state.currentShip].size}</h3>
                         </div>
