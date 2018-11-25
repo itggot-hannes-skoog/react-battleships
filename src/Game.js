@@ -10,6 +10,7 @@ class Square extends Component {
                 onMouseEnter={this.props.handleHover}
                 onMouseLeave={this.props.handleLeaveHover}
                 index={this.props.datakey}>
+                <div><span>X</span></div>
             </div>
         )
     }
@@ -37,21 +38,11 @@ class PlayerField extends Component {
 
 class NpcField extends Component {
 
-    constructor(props) {
-        super(props)
-        this.handleClick = this.handleClick.bind(this)
-    }
-
-    handleClick = (e) => {
-        e.stopPropagation()
-        console.log(e)
-    }
-
     render() {
 
         let squares = []
         for (let i = 0; i < 90; i++) {
-            squares.push(<Square key={i} />)
+            squares.push(<Square handleClick={this.props.handleClick} key={i} datakey={i} />)
         }
 
         return (
@@ -101,30 +92,35 @@ export default class Game extends Component {
                         name: 'Carrier',
                         size: 5,
                         rotation: 'horizontal',
+                        position: null,
                         placed: false
                     },
                     {
                         name: 'Battleship',
                         size: 4,
                         rotation: 'horizontal',
+                        position: null,
                         placed: false
                     },
                     {
                         name: 'Cruiser',
                         size: 3,
                         rotation: 'horizontal',
+                        position: null,
                         placed: false
                     },
                     {
                         name: 'Submarine',
                         size: 3,
                         rotation: 'horizontal',
+                        position: null,
                         placed: false
                     },
                     {
                         name: 'Destroyer',
                         size: 2,
                         rotation: 'horizontal',
+                        position: null,
                         placed: false
                     }
                 ],
@@ -134,38 +130,45 @@ export default class Game extends Component {
                         name: 'Carrier',
                         size: 5,
                         rotation: 'horizontal',
+                        position: null,
                         placed: false
                     },
                     {
                         name: 'Battleship',
                         size: 4,
                         rotation: 'horizontal',
+                        position: null,
                         placed: false
                     },
                     {
                         name: 'Cruiser',
                         size: 3,
                         rotation: 'horizontal',
+                        position: null,
                         placed: false
                     },
                     {
                         name: 'Submarine',
                         size: 3,
                         rotation: 'horizontal',
+                        position: null,
                         placed: false
                     },
                     {
                         name: 'Destroyer',
                         size: 2,
                         rotation: 'horizontal',
+                        position: null,
                         placed: false
                     }
-                ]
+                ],
+            tried: []
         }
         this.startPlacement = this.startPlacement.bind(this)
         this.placeShip = this.placeShip.bind(this)
         this.rotateShip = this.rotateShip.bind(this)
         this.startGame = this.startGame.bind(this)
+        this.playerFire = this.playerFire.bind(this)
     }
 
     // SHIP PLACEMENT
@@ -234,7 +237,7 @@ export default class Game extends Component {
                     })
                     this.setState({
                         playerMatrix: newMatrix
-                    }, this.updateShips)
+                    }, this.updateShips(affectedsquares[0]))
                 }
             } else {
                 let newMatrix = this.state.playerMatrix
@@ -265,17 +268,17 @@ export default class Game extends Component {
                     })
                     this.setState({
                         playerMatrix: newMatrix
-                    }, this.updateShips)
-
+                    }, this.updateShips(affectedsquares[0]))
                 }
             }
         }
     }
 
-    updateShips() {
+    updateShips(position) {
 
         let newShips = Object.assign({}, this.state.playerships);
         newShips[this.state.currentShip].placed = true
+        newShips[this.state.currentShip].position = position
         let result = Object.keys(newShips).map(i => {
             return newShips[i]
         })
@@ -283,6 +286,7 @@ export default class Game extends Component {
             ships: result
         }, this.runPlacement)
 
+        console.log(this.state.ships);
     }
 
     handleHover = (e) => {
@@ -414,7 +418,9 @@ export default class Game extends Component {
         let matrix = this.state.NPCMatrix
         ships.forEach(ship => {
             let rotation = Math.round(Math.random())
+            let clr = '#' + Math.floor(Math.random() * 16777215).toString(16);
             if (rotation === 0) {
+                ship.rotation = 'horizontal'
                 let allowed = false
 
                 while (allowed === false) {
@@ -433,15 +439,20 @@ export default class Game extends Component {
                             allowed = false
                         }
                     }
+                    let turk = document.querySelectorAll('.square')
+                    ship.position = squares[0]
 
                     if (allowed === true) {
                         squares.forEach(sqr => {
+                            console.log('SANT: ' + ship.name)
                             matrix[sqr] = 1
+                            turk[sqr].style.background = clr
                         })
                     }
                 }
 
             } else {
+                ship.rotation = 'vertical'
                 let allowed = false
 
                 while (allowed === false) {
@@ -460,15 +471,22 @@ export default class Game extends Component {
                             allowed = false
                         }
                     }
+                    let turk = document.querySelectorAll('.square')
+                    ship.position = squares[0]
 
                     if (allowed === true) {
                         squares.forEach(sqr => {
                             matrix[sqr] = 1
+                            turk[sqr].style.background = clr
                         })
                     }
                 }
             }
 
+        })
+        this.setState({
+            NPCMatrix: matrix,
+            NPCships: ships
         })
     }
 
@@ -498,25 +516,99 @@ export default class Game extends Component {
         return squares
     }
 
+    playerFire = (e) => {
+        e.stopPropagation()
+        if (this.state.turn === 0) {
+            let position = e.target.getAttribute('index')
+            let squares = e.target.parentNode.childNodes
+            let matrix = this.state.NPCMatrix
+            if (matrix[position] === 1) {
+                squares[position].firstChild.classList.add('hit')
+                matrix[position] = 2
+                this.setState({
+                    NPCMatrix: matrix
+                })
+            } else {
+                squares[position].firstChild.classList.add('miss')
+            }
+            this.setState({
+                turn: 1
+            }, this.NPCFire)
+        }
+        if (!this.state.NPCMatrix.includes(1) || !this.state.playerMatrix.includes(1)) {
+            this.setState({
+                gamestage: 'gameover'
+            })
+        }
+    }
+
+    NPCFire() {
+        if (this.state.turn === 1) {
+            let position = Math.round(Math.random() * 91)
+            let allowed = false
+            let tried = this.state.tried
+            while (allowed === false) {
+                allowed = true
+                if (tried.includes(position)) {
+                    position = Math.round(Math.random() * 91)
+                    allowed = false
+                } else {
+                    tried.push(position)
+                }
+                if (this.state.tried.length > 89) {
+                    allowed = true
+                }
+            }
+            this.setState({
+                tried: tried
+            })
+            let matrix = this.state.playerMatrix
+            let squares = document.querySelectorAll('.player .square')
+            if (matrix[position] === 1) {
+                squares[position].firstChild.classList.add('hit')
+                matrix[position] = 2
+                this.setState({
+                    playerMatrix: matrix
+                })
+            } else {
+                squares[position].firstChild.classList.add('miss')
+            }
+            this.setState({
+                turn: 0
+            })
+        }
+        if (!this.state.NPCMatrix.includes(1) || !this.state.playerMatrix.includes(1)) {
+            this.setState({
+                gamestage: 'gameover'
+            })
+        }
+    }
+
     render() {
 
         let info = (
-                <div className="not_ready">
-                    <button disabled={this.state.gamestage !== 'notready'} onClick={this.startPlacement}>Place ships</button>
-                    <button disabled={this.state.gamestage !== 'shipplacement'} onClick={this.rotateShip}>Rotate ship</button>
-                    <button /* disabled={this.state.gamestage !== 'ready'} */ className="start" onClick={this.startGame}>Start Game</button>
-                    {this.state.gamestage === 'shipplacement' ? (
-                        <div className="current_ship">
-                            <h1>{this.state.playerships[this.state.currentShip].name}</h1>
-                            <h3>{this.state.playerships[this.state.currentShip].size}</h3>
-                        </div>
-                    ) : ''}
-                </div>
-            )
+            <div className="not_ready">
+                <button disabled={this.state.gamestage !== 'notready'} onClick={this.startPlacement}>Place ships</button>
+                <button disabled={this.state.gamestage !== 'shipplacement'} onClick={this.rotateShip}>Rotate ship</button>
+                <button /* disabled={this.state.gamestage !== 'ready'} */ className="start" onClick={this.startGame}>Start Game</button>
+                {this.state.gamestage === 'shipplacement' ? (
+                    <div className="current_ship">
+                        <h1>{this.state.playerships[this.state.currentShip].name}</h1>
+                        <h3>{this.state.playerships[this.state.currentShip].size}</h3>
+                    </div>
+                ) : ''}
+                {this.state.gamestage === 'started' ? (
+                    <h2>It is {this.state.turn === 0 ? ' your turn' : ' NPCs turn'}</h2>
+                ) : ''}
+                {this.state.gamestage === 'gameover' ? (
+                    <h2>Game Over</h2>
+                ) : ''}
+            </div>
+        )
 
         return (
             <div className="game" >
-                <NpcField />
+                <NpcField handleClick={this.playerFire} />
                 <section className="info">
                     {info}
                 </section>

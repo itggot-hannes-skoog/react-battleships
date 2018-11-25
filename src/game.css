@@ -37,6 +37,16 @@ h1 {
     background: yellow!important
 }
 
+.miss {
+    background: white!important;
+    display: flex!important;
+}
+
+.hit {
+    display: flex!important;
+    background: red!important
+}
+
 .player {
     grid-area: ply;
     width: 100%;
@@ -48,4 +58,23 @@ h1 {
     width: 10%;
     background: rgb(98, 156, 209);
     margin: 2px;
+    position: relative;
+}
+
+.square div {
+    display: none;
+    position: absolute;
+    border-radius: 10rem;
+    top: 5px;
+    right: 5px;
+    bottom: 5px;
+    left: 5px;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+.square div span {
+    display: none
 }
