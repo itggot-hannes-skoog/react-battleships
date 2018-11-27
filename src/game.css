@@ -1,3 +1,7 @@
+* {
+    margin: 0;
+}
+
 .game {
     height: 60vh;
     width: 80vw;
@@ -7,6 +11,7 @@
     grid-template-areas: 
     "npc info ply";
     padding: 2rem;
+    font-family: 'Open sans', sans-serif;
 }
 
 h1 {
@@ -16,15 +21,12 @@ h1 {
 }
 
 .info {
+    text-align: center;
     grid-area: info;
-}
-
-.game_area {
-    width: 100%;
-    height: 90%;
-    background: white;
     display: flex;
-    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }
 
 .npc {
@@ -33,8 +35,37 @@ h1 {
     height: 100%;
 }
 
+.game_area {
+    width: 100%;
+    height: 90%;
+    background: white;
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-gap: 2px;
+}
+
+.square {
+    flex-grow: 1;
+    background: rgb(98, 156, 209);
+    position: relative;
+}
+
+.square div {
+    display: none;
+    position: absolute;
+    border-radius: 10rem;
+    top: 5px;
+    right: 5px;
+    bottom: 5px;
+    left: 5px;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
 .placed {
-    background: yellow!important
+    background: rgb(56, 56, 196)!important
 }
 
 .miss {
@@ -53,28 +84,31 @@ h1 {
     height: 100%;
 }
 
-.square {
-    flex-grow: 1;
-    width: 10%;
-    background: rgb(98, 156, 209);
-    margin: 2px;
-    position: relative;
-}
-
-.square div {
-    display: none;
-    position: absolute;
-    border-radius: 10rem;
-    top: 5px;
-    right: 5px;
-    bottom: 5px;
-    left: 5px;
-    text-align: center;
+.controlbtn {
+    display: flex;
     justify-content: center;
     align-items: center;
-    pointer-events: none;
+    height: 50px;
+    width: 200px;
+    border: solid 2px black;
+    margin: 1rem;
+    cursor: pointer;
 }
 
-.square div span {
-    display: none
+.ship-icon {
+    object-fit: contain;
+    padding: 2rem;
 }
+
+.ship-icon img {
+    object-fit: contain;
+    width: 100%;
+}
+
+.current-ship {
+    text-align: center;
+}
+
+/* font-family: 'Roboto', sans-serif;
+font-family: 'Chakra Petch', sans-serif;
+font-family: 'Ubuntu', sans-serif; */

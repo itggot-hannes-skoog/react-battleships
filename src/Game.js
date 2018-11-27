@@ -1,5 +1,10 @@
 import React, { Component } from 'react';
 import './game.css'
+import Carrier from './assets/icons/Carrier.png';
+import Battleship from './assets/icons/Battleship.png';
+import Cruiser from './assets/icons/Cruiser.png';
+import Submarine from './assets/icons/Submarine.png';
+import Destroyer from './assets/icons/Destroyer.png';
 
 class Square extends Component {
 
@@ -10,7 +15,7 @@ class Square extends Component {
                 onMouseEnter={this.props.handleHover}
                 onMouseLeave={this.props.handleLeaveHover}
                 index={this.props.datakey}>
-                <div><span>X</span></div>
+                <div></div>
             </div>
         )
     }
@@ -64,6 +69,7 @@ export default class Game extends Component {
             gamestage: 'notready',
             turn: 0,
             currentShip: -1,
+            hit: false,
             playerMatrix: [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -286,7 +292,6 @@ export default class Game extends Component {
             ships: result
         }, this.runPlacement)
 
-        console.log(this.state.ships);
     }
 
     handleHover = (e) => {
@@ -416,6 +421,7 @@ export default class Game extends Component {
     placeNPCShips() {
         let ships = this.state.NPCships
         let matrix = this.state.NPCMatrix
+        let turk = document.querySelectorAll('.npc .square')
         ships.forEach(ship => {
             let rotation = Math.round(Math.random())
             let clr = '#' + Math.floor(Math.random() * 16777215).toString(16);
@@ -439,14 +445,12 @@ export default class Game extends Component {
                             allowed = false
                         }
                     }
-                    let turk = document.querySelectorAll('.square')
                     ship.position = squares[0]
 
                     if (allowed === true) {
                         squares.forEach(sqr => {
-                            console.log('SANT: ' + ship.name)
                             matrix[sqr] = 1
-                            turk[sqr].style.background = clr
+                            // turk[sqr].style.background = clr
                         })
                     }
                 }
@@ -471,13 +475,12 @@ export default class Game extends Component {
                             allowed = false
                         }
                     }
-                    let turk = document.querySelectorAll('.square')
                     ship.position = squares[0]
 
                     if (allowed === true) {
                         squares.forEach(sqr => {
                             matrix[sqr] = 1
-                            turk[sqr].style.background = clr
+                            // turk[sqr].style.background = clr
                         })
                     }
                 }
@@ -518,7 +521,8 @@ export default class Game extends Component {
 
     playerFire = (e) => {
         e.stopPropagation()
-        if (this.state.turn === 0) {
+        console.log(this.state.turn === 0 && this.state.gamestage === 'started')
+        if (this.state.turn === 0 && this.state.gamestage === 'started') {
             let position = e.target.getAttribute('index')
             let squares = e.target.parentNode.childNodes
             let matrix = this.state.NPCMatrix
@@ -526,19 +530,23 @@ export default class Game extends Component {
                 squares[position].firstChild.classList.add('hit')
                 matrix[position] = 2
                 this.setState({
-                    NPCMatrix: matrix
+                    NPCMatrix: matrix,
+                    hit: true
                 })
             } else {
                 squares[position].firstChild.classList.add('miss')
+                this.setState({
+                    hit: false
+                })
             }
             this.setState({
                 turn: 1
             }, this.NPCFire)
-        }
-        if (!this.state.NPCMatrix.includes(1) || !this.state.playerMatrix.includes(1)) {
-            this.setState({
-                gamestage: 'gameover'
-            })
+            if (!this.state.NPCMatrix.includes(1) || !this.state.playerMatrix.includes(1)) {
+                this.setState({
+                    gamestage: 'gameover'
+                })
+            }
         }
     }
 
@@ -568,49 +576,94 @@ export default class Game extends Component {
                 squares[position].firstChild.classList.add('hit')
                 matrix[position] = 2
                 this.setState({
-                    playerMatrix: matrix
+                    playerMatrix: matrix,
+                    hit: true
                 })
             } else {
                 squares[position].firstChild.classList.add('miss')
+                this.setState({
+                    hit: false
+                })
             }
             this.setState({
                 turn: 0
             })
-        }
-        if (!this.state.NPCMatrix.includes(1) || !this.state.playerMatrix.includes(1)) {
-            this.setState({
-                gamestage: 'gameover'
-            })
+            if (!this.state.NPCMatrix.includes(1) || !this.state.playerMatrix.includes(1)) {
+                this.setState({
+                    gamestage: 'gameover'
+                })
+            }
         }
     }
 
     render() {
 
-        let info = (
-            <div className="not_ready">
-                <button disabled={this.state.gamestage !== 'notready'} onClick={this.startPlacement}>Place ships</button>
-                <button disabled={this.state.gamestage !== 'shipplacement'} onClick={this.rotateShip}>Rotate ship</button>
-                <button /* disabled={this.state.gamestage !== 'ready'} */ className="start" onClick={this.startGame}>Start Game</button>
-                {this.state.gamestage === 'shipplacement' ? (
-                    <div className="current_ship">
+        let controllbtn
+        let infotxt
+        let additional
+        let icon
+        switch (this.state.gamestage) {
+            case 'notready':
+                controllbtn = <div className="controlbtn" onClick={this.startPlacement}><h3>Place ships</h3></div>
+                infotxt = <h2>Press the button to place ships</h2>
+                break;
+            case 'shipplacement':
+                controllbtn = <div className="controlbtn" onClick={this.rotateShip}><h3>Rotate ship</h3></div>
+                infotxt = <h2>Please place your ships</h2>
+                switch (this.state.playerships[this.state.currentShip].name) {
+                    case 'Carrier':
+                        icon = <img src={Carrier} alt="Carrier"></img>
+                        break;
+                    case 'Battleship':
+                        icon = <img src={Battleship} alt="Battleship"></img>
+                        break;
+                    case 'Cruiser':
+                        icon = <img src={Cruiser} alt="Cruiser"></img>
+                        break;
+                    case 'Submarine':
+                        icon = <img src={Submarine} alt="Submarine"></img>
+                        break;
+                    case 'Destroyer':
+                        icon = <img src={Destroyer} alt="Destroyer"></img>
+                        break;
+                }
+                additional = (
+                    <div className="current-ship">
                         <h1>{this.state.playerships[this.state.currentShip].name}</h1>
-                        <h3>{this.state.playerships[this.state.currentShip].size}</h3>
+                        <h3>Size: {this.state.playerships[this.state.currentShip].size}</h3>
+                        <div className="ship-icon">{icon}</div>
+                    </div>)
+                break;
+            case 'ready':
+                controllbtn = <div className="controlbtn" onClick={this.startGame}><h3>Start Game</h3></div>
+                break;
+            case 'started':
+                infotxt = (<h2>It is {this.state.turn === 0 ? ' your turn' : ' NPCs turn'}</h2>)
+                additional = (
+                    <div>
+                        <h4>{this.state.turn === 1 ? 'Player' : 'NPC'} {this.state.hit === true ? 'hit!' : 'missed!'}</h4>
+                        {this.state.ships.map((ship, i) => {
+                            return (
+                                <aside key={i}>
+                                    <h3>{ship.name}</h3>
+                                </aside>
+                            )
+                        })}
                     </div>
-                ) : ''}
-                {this.state.gamestage === 'started' ? (
-                    <h2>It is {this.state.turn === 0 ? ' your turn' : ' NPCs turn'}</h2>
-                ) : ''}
-                {this.state.gamestage === 'gameover' ? (
-                    <h2>Game Over</h2>
-                ) : ''}
-            </div>
-        )
+                )
+                break;
+            case 'gameover':
+                infotxt = <h2>Game Over</h2>
+                break;
+        }
 
         return (
             <div className="game" >
                 <NpcField handleClick={this.playerFire} />
                 <section className="info">
-                    {info}
+                    {infotxt}
+                    {controllbtn}
+                    {additional}
                 </section>
                 <PlayerField
                     handleHover={this.handleHover}
