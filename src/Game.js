@@ -137,38 +137,50 @@ export default class Game extends Component {
                         size: 5,
                         rotation: 'horizontal',
                         position: null,
-                        placed: false
+                        placed: false,
+                        state: [0, 0, 0, 0, 0]
                     },
                     {
                         name: 'Battleship',
                         size: 4,
                         rotation: 'horizontal',
                         position: null,
-                        placed: false
+                        placed: false,
+                        state: [0, 0, 0, 0]
                     },
                     {
                         name: 'Cruiser',
                         size: 3,
                         rotation: 'horizontal',
                         position: null,
-                        placed: false
+                        placed: false,
+                        state: [0, 0, 0]
                     },
                     {
                         name: 'Submarine',
                         size: 3,
                         rotation: 'horizontal',
                         position: null,
-                        placed: false
+                        placed: false,
+                        state: [0, 0, 0]
                     },
                     {
                         name: 'Destroyer',
                         size: 2,
                         rotation: 'horizontal',
                         position: null,
-                        placed: false
+                        placed: false,
+                        state: [0, 0]
                     }
                 ],
-            tried: []
+            tried: [],
+            NPCHitInfo: {
+                position: null,
+                hit: false,
+                direction: null,
+                dirconfirmed: false,
+                done: null
+            }
         }
         this.startPlacement = this.startPlacement.bind(this)
         this.placeShip = this.placeShip.bind(this)
@@ -243,7 +255,7 @@ export default class Game extends Component {
                     })
                     this.setState({
                         playerMatrix: newMatrix
-                    }, this.updateShips(affectedsquares[0]))
+                    }, this.updateShips(affectedsquares))
                 }
             } else {
                 let newMatrix = this.state.playerMatrix
@@ -274,7 +286,7 @@ export default class Game extends Component {
                     })
                     this.setState({
                         playerMatrix: newMatrix
-                    }, this.updateShips(affectedsquares[0]))
+                    }, this.updateShips(affectedsquares))
                 }
             }
         }
@@ -421,10 +433,8 @@ export default class Game extends Component {
     placeNPCShips() {
         let ships = this.state.NPCships
         let matrix = this.state.NPCMatrix
-        let turk = document.querySelectorAll('.npc .square')
         ships.forEach(ship => {
             let rotation = Math.round(Math.random())
-            let clr = '#' + Math.floor(Math.random() * 16777215).toString(16);
             if (rotation === 0) {
                 ship.rotation = 'horizontal'
                 let allowed = false
@@ -450,7 +460,6 @@ export default class Game extends Component {
                     if (allowed === true) {
                         squares.forEach(sqr => {
                             matrix[sqr] = 1
-                            // turk[sqr].style.background = clr
                         })
                     }
                 }
@@ -480,7 +489,6 @@ export default class Game extends Component {
                     if (allowed === true) {
                         squares.forEach(sqr => {
                             matrix[sqr] = 1
-                            // turk[sqr].style.background = clr
                         })
                     }
                 }
@@ -521,7 +529,6 @@ export default class Game extends Component {
 
     playerFire = (e) => {
         e.stopPropagation()
-        console.log(this.state.turn === 0 && this.state.gamestage === 'started')
         if (this.state.turn === 0 && this.state.gamestage === 'started') {
             let position = e.target.getAttribute('index')
             let squares = e.target.parentNode.childNodes
@@ -550,15 +557,47 @@ export default class Game extends Component {
         }
     }
 
+    NPCAi() {
+        let NPCHitInfo = this.state.NPCHitInfo
+        let directions = ['up', 'right', 'down', 'left']
+        let position = NPCHitInfo.position
+        if (NPCHitInfo.dirconfirmed === false) {
+            NPCHitInfo.direction = directions[directions.indexOf(NPCHitInfo.direction) + 1]
+        }
+        switch (NPCHitInfo.direction) {
+            case 'up': NPCHitInfo.position -= 9
+                break
+            case 'right': NPCHitInfo.position += 1
+                break
+            case 'down': NPCHitInfo.position += 9
+                break
+            case 'left': NPCHitInfo.position -= 1
+                break
+        }
+        this.setState({
+            NPCHitInfo: NPCHitInfo
+        })
+        return NPCHitInfo.position
+    }
+
     NPCFire() {
         if (this.state.turn === 1) {
-            let position = Math.round(Math.random() * 91)
             let allowed = false
             let tried = this.state.tried
+            let position = Math.floor(Math.random() * 90)
+
+            if (this.state.NPCHitInfo.hit === true || this.state.NPCHitInfo.done === false) {
+                position = this.NPCAi()
+            }
+
             while (allowed === false) {
                 allowed = true
-                if (tried.includes(position)) {
-                    position = Math.round(Math.random() * 91)
+                if (tried.includes(position) || position > 90) {
+                    if (this.state.NPCHitInfo.hit === true) {
+                        position = this.NPCAi()
+                    } else {
+                        position = Math.floor(Math.random() * 90)
+                    }
                     allowed = false
                 } else {
                     tried.push(position)
@@ -570,19 +609,34 @@ export default class Game extends Component {
             this.setState({
                 tried: tried
             })
+
             let matrix = this.state.playerMatrix
             let squares = document.querySelectorAll('.player .square')
             if (matrix[position] === 1) {
                 squares[position].firstChild.classList.add('hit')
                 matrix[position] = 2
+                let ships = this.state.playerships
+                ships.map(ship => {
+                    if (ship.position.includes(position)) {
+                        return ship.state[ship.position.indexOf(position)] = 1
+                    }
+                })
+                let NPCHitInfo = this.state.NPCHitInfo
+                NPCHitInfo.hit = true
+                NPCHitInfo.hit = true
+                NPCHitInfo.position = position
                 this.setState({
                     playerMatrix: matrix,
-                    hit: true
+                    hit: true,
+                    NPCHitInfo: NPCHitInfo
                 })
             } else {
                 squares[position].firstChild.classList.add('miss')
+                let NPCHitInfo = this.state.NPCHitInfo
+                NPCHitInfo.hit = false
                 this.setState({
-                    hit: false
+                    hit: false,
+                    NPCHitInfo: NPCHitInfo
                 })
             }
             this.setState({
@@ -639,14 +693,45 @@ export default class Game extends Component {
                 break;
             case 'started':
                 infotxt = (<h2>It is {this.state.turn === 0 ? ' your turn' : ' NPCs turn'}</h2>)
+                let icon
                 additional = (
                     <div>
                         <h4>{this.state.turn === 1 ? 'Player' : 'NPC'} {this.state.hit === true ? 'hit!' : 'missed!'}</h4>
-                        {this.state.ships.map((ship, i) => {
+                        {this.state.playerships.map((ship, i) => {
+                            switch (ship.name) {
+                                case 'Carrier':
+                                    icon = <img src={Carrier} alt="Carrier"></img>
+                                    break;
+                                case 'Battleship':
+                                    icon = <img src={Battleship} alt="Battleship"></img>
+                                    break;
+                                case 'Cruiser':
+                                    icon = <img src={Cruiser} alt="Cruiser"></img>
+                                    break;
+                                case 'Submarine':
+                                    icon = <img src={Submarine} alt="Submarine"></img>
+                                    break;
+                                case 'Destroyer':
+                                    icon = <img src={Destroyer} alt="Destroyer"></img>
+                                    break;
+                            }
                             return (
-                                <aside key={i}>
-                                    <h3>{ship.name}</h3>
-                                </aside>
+                                <section key={`ship + ${i}`} className="ship">
+                                    <h3 className={ship.state.includes(0) ? "" : "struken"}>{ship.name}</h3>
+                                    <div className="shipinfo">
+                                        <div className="ship-icon">{icon}</div>
+                                        <div className="shipstate">
+                                            {ship.state.map((state, i) => {
+                                                if (state === 0) {
+                                                    return <div key={`infohit ${ship.name} ${i}`} className="infomiss"></div>
+                                                } else {
+                                                    return <div key={`infomiss ${ship.name} ${i}`} className="infohit"></div>
+
+                                                }
+                                            })}
+                                        </div>
+                                    </div>
+                                </section>
                             )
                         })}
                     </div>
