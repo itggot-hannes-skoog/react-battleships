@@ -179,7 +179,9 @@ export default class Game extends Component {
                 hit: false,
                 direction: null,
                 dirconfirmed: false,
-                done: null
+                done: null,
+                searchingdir: false,
+                active: false
             }
         }
         this.startPlacement = this.startPlacement.bind(this)
@@ -561,23 +563,32 @@ export default class Game extends Component {
         let NPCHitInfo = this.state.NPCHitInfo
         let directions = ['up', 'right', 'down', 'left']
         let position = NPCHitInfo.position
+        if (NPCHitInfo.active == true && NPCHitInfo.hit == true) {
+            NPCHitInfo.dirconfirmed = true
+        }
         if (NPCHitInfo.dirconfirmed === false) {
-            NPCHitInfo.direction = directions[directions.indexOf(NPCHitInfo.direction) + 1]
+            NPCHitInfo.searchingdir = true
+            NPCHitInfo.direction = directions[(directions.indexOf(NPCHitInfo.direction) + 1) % 4]
+        } else {
+            NPCHitInfo.searchingdir = false
         }
         switch (NPCHitInfo.direction) {
-            case 'up': NPCHitInfo.position -= 9
+            case 'up': position -= 9
                 break
-            case 'right': NPCHitInfo.position += 1
+            case 'right': position += 1
                 break
-            case 'down': NPCHitInfo.position += 9
+            case 'down': position += 9
                 break
-            case 'left': NPCHitInfo.position -= 1
+            case 'left': position -= 1
                 break
         }
+        console.log(position)
+        NPCHitInfo.active = true
+        console.log(NPCHitInfo)
         this.setState({
             NPCHitInfo: NPCHitInfo
         })
-        return NPCHitInfo.position
+        return position
     }
 
     NPCFire() {
@@ -586,14 +597,14 @@ export default class Game extends Component {
             let tried = this.state.tried
             let position = Math.floor(Math.random() * 90)
 
-            if (this.state.NPCHitInfo.hit === true || this.state.NPCHitInfo.done === false) {
+            if (this.state.NPCHitInfo.hit === true || this.state.NPCHitInfo.done === false || this.state.NPCHitInfo.searchingdir === true) {
                 position = this.NPCAi()
             }
 
             while (allowed === false) {
                 allowed = true
                 if (tried.includes(position) || position > 90) {
-                    if (this.state.NPCHitInfo.hit === true) {
+                    if (this.state.NPCHitInfo.hit === true || this.state.NPCHitInfo.done === false || this.state.NPCHitInfo.searchingdir === true) {
                         position = this.NPCAi()
                     } else {
                         position = Math.floor(Math.random() * 90)
@@ -623,7 +634,6 @@ export default class Game extends Component {
                 })
                 let NPCHitInfo = this.state.NPCHitInfo
                 NPCHitInfo.hit = true
-                NPCHitInfo.hit = true
                 NPCHitInfo.position = position
                 this.setState({
                     playerMatrix: matrix,
@@ -634,6 +644,10 @@ export default class Game extends Component {
                 squares[position].firstChild.classList.add('miss')
                 let NPCHitInfo = this.state.NPCHitInfo
                 NPCHitInfo.hit = false
+                if (NPCHitInfo.active) {
+                    NPCHitInfo.dirconfirmed = false
+                    NPCHitInfo.active = false
+                }
                 this.setState({
                     hit: false,
                     NPCHitInfo: NPCHitInfo
