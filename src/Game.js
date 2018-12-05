@@ -563,7 +563,7 @@ export default class Game extends Component {
         let NPCHitInfo = this.state.NPCHitInfo
         let directions = ['up', 'right', 'down', 'left']
         let position = NPCHitInfo.position
-        if (NPCHitInfo.active == true && NPCHitInfo.hit == true) {
+        if (NPCHitInfo.active === true && NPCHitInfo.hit === true) {
             NPCHitInfo.dirconfirmed = true
         }
         if (NPCHitInfo.dirconfirmed === false) {
@@ -581,10 +581,9 @@ export default class Game extends Component {
                 break
             case 'left': position -= 1
                 break
+            default: break
         }
-        console.log(position)
         NPCHitInfo.active = true
-        console.log(NPCHitInfo)
         this.setState({
             NPCHitInfo: NPCHitInfo
         })
@@ -595,20 +594,18 @@ export default class Game extends Component {
         if (this.state.turn === 1) {
             let allowed = false
             let tried = this.state.tried
-            let position = Math.floor(Math.random() * 90)
+            let position
 
-            if (this.state.NPCHitInfo.hit === true || this.state.NPCHitInfo.done === false || this.state.NPCHitInfo.searchingdir === true) {
+            if (this.state.NPCHitInfo.hit === true || this.state.NPCHitInfo.searchingdir === true) {
                 position = this.NPCAi()
+            } else {
+                position = Math.floor(Math.random() * 90)
             }
 
             while (allowed === false) {
                 allowed = true
-                if (tried.includes(position) || position > 90) {
-                    if (this.state.NPCHitInfo.hit === true || this.state.NPCHitInfo.done === false || this.state.NPCHitInfo.searchingdir === true) {
-                        position = this.NPCAi()
-                    } else {
-                        position = Math.floor(Math.random() * 90)
-                    }
+                if (tried.includes(position) || position > 90 || position < 0) {
+                    position = Math.floor(Math.random() * 90)
                     allowed = false
                 } else {
                     tried.push(position)
@@ -627,10 +624,12 @@ export default class Game extends Component {
                 squares[position].firstChild.classList.add('hit')
                 matrix[position] = 2
                 let ships = this.state.playerships
+                let output
                 ships.map(ship => {
                     if (ship.position.includes(position)) {
-                        return ship.state[ship.position.indexOf(position)] = 1
+                        output = ship.state[ship.position.indexOf(position)] = 1
                     }
+                    return output
                 })
                 let NPCHitInfo = this.state.NPCHitInfo
                 NPCHitInfo.hit = true
@@ -694,6 +693,7 @@ export default class Game extends Component {
                     case 'Destroyer':
                         icon = <img src={Destroyer} alt="Destroyer"></img>
                         break;
+                    default: break
                 }
                 additional = (
                     <div className="current-ship">
@@ -707,7 +707,6 @@ export default class Game extends Component {
                 break;
             case 'started':
                 infotxt = (<h2>It is {this.state.turn === 0 ? ' your turn' : ' NPCs turn'}</h2>)
-                let icon
                 additional = (
                     <div>
                         <h4>{this.state.turn === 1 ? 'Player' : 'NPC'} {this.state.hit === true ? 'hit!' : 'missed!'}</h4>
@@ -728,6 +727,7 @@ export default class Game extends Component {
                                 case 'Destroyer':
                                     icon = <img src={Destroyer} alt="Destroyer"></img>
                                     break;
+                                default: break
                             }
                             return (
                                 <section key={`ship + ${i}`} className="ship">
@@ -754,6 +754,7 @@ export default class Game extends Component {
             case 'gameover':
                 infotxt = <h2>Game Over</h2>
                 break;
+            default: break
         }
 
         return (
