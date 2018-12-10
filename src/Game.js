@@ -6,6 +6,7 @@ import Cruiser from './assets/icons/Cruiser.png';
 import Submarine from './assets/icons/Submarine.png';
 import Destroyer from './assets/icons/Destroyer.png';
 
+// Square component which functions are derived from props
 class Square extends Component {
 
     render() {
@@ -21,10 +22,12 @@ class Square extends Component {
     }
 }
 
+// Players field
 class PlayerField extends Component {
 
     render() {
 
+        // Skapa 90 squares och skicka in props från props
         let squares = []
         for (let i = 0; i < 90; i++) {
             squares.push(<Square handleClick={this.props.handleClick} key={i} datakey={i} handleHover={this.props.handleHover} handleLeaveHover={this.props.handleLeaveHover} />)
@@ -41,10 +44,12 @@ class PlayerField extends Component {
     }
 }
 
+// NPC's field
 class NpcField extends Component {
 
     render() {
 
+        // Skapa 90 squares och skicka in props från props
         let squares = []
         for (let i = 0; i < 90; i++) {
             squares.push(<Square handleClick={this.props.handleClick} key={i} datakey={i} />)
@@ -61,8 +66,10 @@ class NpcField extends Component {
     }
 }
 
+// The game itself
 export default class Game extends Component {
 
+    // Initiera states and bind functions to this
     constructor(props) {
         super(props)
         this.state = {
@@ -190,9 +197,8 @@ export default class Game extends Component {
         this.startGame = this.startGame.bind(this)
         this.playerFire = this.playerFire.bind(this)
     }
-
-    // SHIP PLACEMENT
-
+    
+    // Update gamestate and start placement of player's ships
     startPlacement = (e) => {
         this.setState({
             gamestage: 'shipplacement'
@@ -200,6 +206,7 @@ export default class Game extends Component {
         this.runPlacement()
     }
 
+    // Run player's ship placement procedure
     runPlacement() {
         let placed = []
         for (let i = 0; i < this.state.playerMatrix.length; i++) {
@@ -221,11 +228,13 @@ export default class Game extends Component {
         }
     }
 
+    // Clickfunction to place player's ship
     placeShip = (e) => {
         e.stopPropagation()
         if (this.state.gamestage === 'shipplacement') {
             let position = e.target.getAttribute('index')
 
+            // Decide which way ship is rotated and run the placement accordingly
             if (this.state.playerships[this.state.currentShip].rotation === 'vertical') {
                 let newMatrix = this.state.playerMatrix
                 let multiplier
@@ -294,6 +303,7 @@ export default class Game extends Component {
         }
     }
 
+    // Update the state of placed ship
     updateShips(position) {
 
         let newShips = Object.assign({}, this.state.playerships);
@@ -308,6 +318,7 @@ export default class Game extends Component {
 
     }
 
+    // Hoverfunction, highlight affeced squares on hover
     handleHover = (e) => {
         e.stopPropagation()
         if (this.state.gamestage === 'shipplacement') {
@@ -332,7 +343,7 @@ export default class Game extends Component {
                 }
                 if (allowed === true) {
                     affectedsquares.forEach(sqr => {
-                        squares[sqr].style.background = 'green'
+                        squares[sqr].style.background = 'rgb(38, 84, 128)'
                     })
                 }
             } else {
@@ -351,7 +362,7 @@ export default class Game extends Component {
                 }
                 if (allowed === true) {
                     affectedsquares.forEach(sqr => {
-                        squares[sqr].style.background = 'green'
+                        squares[sqr].style.background = 'rgb(38, 84, 128)'
                     })
 
                 }
@@ -359,6 +370,7 @@ export default class Game extends Component {
         }
     }
 
+    // Remove highlight on hover leave
     handleLeaveHover = (e) => {
         e.stopPropagation()
         if (this.state.gamestage === 'shipplacement') {
@@ -410,6 +422,7 @@ export default class Game extends Component {
         }
     }
 
+    // Clickfunction to rotate ship for placement
     rotateShip() {
         let newShips = Object.assign(this.state.playerships);
         switch (newShips[this.state.currentShip].rotation) {
@@ -423,8 +436,7 @@ export default class Game extends Component {
         }
     }
 
-    // GAME STARTED
-
+    // Run function to place NPC's ships, then start game
     startGame() {
         this.placeNPCShips()
         this.setState({
@@ -432,6 +444,7 @@ export default class Game extends Component {
         })
     }
 
+    // Place NPC ships
     placeNPCShips() {
         let ships = this.state.NPCships
         let matrix = this.state.NPCMatrix
@@ -503,6 +516,7 @@ export default class Game extends Component {
         })
     }
 
+    // Generate horizontal ship for NPC
     generateHorizontalShip(ship) {
         let rand = Math.random()
         let position = rand * this.state.NPCMatrix.length
@@ -515,6 +529,7 @@ export default class Game extends Component {
         return squares
     }
 
+    // Generate vertical ship for NPC
     generateVerticalShip(ship) {
         let rand = Math.random()
         let position = rand * this.state.NPCMatrix.length
@@ -529,6 +544,7 @@ export default class Game extends Component {
         return squares
     }
 
+    // Clickfunction for player to fire on NPC's field
     playerFire = (e) => {
         e.stopPropagation()
         if (this.state.turn === 0 && this.state.gamestage === 'started') {
@@ -559,37 +575,7 @@ export default class Game extends Component {
         }
     }
 
-    NPCAi() {
-        let NPCHitInfo = this.state.NPCHitInfo
-        let directions = ['up', 'right', 'down', 'left']
-        let position = NPCHitInfo.position
-        if (NPCHitInfo.active === true && NPCHitInfo.hit === true) {
-            NPCHitInfo.dirconfirmed = true
-        }
-        if (NPCHitInfo.dirconfirmed === false) {
-            NPCHitInfo.searchingdir = true
-            NPCHitInfo.direction = directions[(directions.indexOf(NPCHitInfo.direction) + 1) % 4]
-        } else {
-            NPCHitInfo.searchingdir = false
-        }
-        switch (NPCHitInfo.direction) {
-            case 'up': position -= 9
-                break
-            case 'right': position += 1
-                break
-            case 'down': position += 9
-                break
-            case 'left': position -= 1
-                break
-            default: break
-        }
-        NPCHitInfo.active = true
-        this.setState({
-            NPCHitInfo: NPCHitInfo
-        })
-        return position
-    }
-
+    // Function for NPC to fire on players field
     NPCFire() {
         if (this.state.turn === 1) {
             let allowed = false
@@ -663,12 +649,50 @@ export default class Game extends Component {
         }
     }
 
+    // NPC Ai to be used if NPC hits a shot
+    NPCAi() {
+        let NPCHitInfo = this.state.NPCHitInfo
+        let directions = ['up', 'right', 'down', 'left']
+        let position = NPCHitInfo.position
+        
+        if (NPCHitInfo.active === true && NPCHitInfo.hit === true) {
+            NPCHitInfo.dirconfirmed = true
+        }
+
+        if (NPCHitInfo.dirconfirmed === false) {
+            NPCHitInfo.searchingdir = true
+            NPCHitInfo.direction = directions[(directions.indexOf(NPCHitInfo.direction) + 1) % 4]
+        } else {
+            NPCHitInfo.searchingdir = false
+        }
+
+        switch (NPCHitInfo.direction) {
+            case 'up': position -= 9
+                break
+            case 'right': position += 1
+                break
+            case 'down': position += 9
+                break
+            case 'left': position -= 1
+                break
+            default: break
+        }
+        NPCHitInfo.active = true
+        this.setState({
+            NPCHitInfo: NPCHitInfo
+        })
+        return position
+    }
+
     render() {
 
+        // Initialize all info content
         let controllbtn
         let infotxt
         let additional
         let icon
+
+        // Change info content based on gamestage etcetera
         switch (this.state.gamestage) {
             case 'notready':
                 controllbtn = <div className="controlbtn" onClick={this.startPlacement}><h3>Place ships</h3></div>
@@ -740,7 +764,6 @@ export default class Game extends Component {
                                                     return <div key={`infohit ${ship.name} ${i}`} className="infomiss"></div>
                                                 } else {
                                                     return <div key={`infomiss ${ship.name} ${i}`} className="infohit"></div>
-
                                                 }
                                             })}
                                         </div>
@@ -753,10 +776,12 @@ export default class Game extends Component {
                 break;
             case 'gameover':
                 infotxt = <h2>Game Over</h2>
+                additional = <form action="/"><button className="controlbtn"><h3>Restart game</h3></button></form>
                 break;
             default: break
         }
 
+        // Return all components and info
         return (
             <div className="game" >
                 <NpcField handleClick={this.playerFire} />

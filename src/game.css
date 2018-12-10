@@ -11,7 +11,7 @@
     grid-template-areas: 
     "npc info ply";
     padding: 2rem;
-    font-family: 'Open sans', sans-serif;
+    font-family: 'Chakra Petch', sans-serif;
 }
 
 h1 {
@@ -75,7 +75,7 @@ h1 {
 
 .hit {
     display: flex!important;
-    background: red!important
+    background: #C53636!important
 }
 
 .player {
@@ -86,6 +86,7 @@ h1 {
 
 .controlbtn {
     display: flex;
+    font-family: 'Ubuntu', sans-serif;
     justify-content: center;
     align-items: center;
     height: 50px;
@@ -93,6 +94,7 @@ h1 {
     border: solid 2px black;
     margin: 1rem;
     cursor: pointer;
+    box-shadow: 0px 0px 16px -4px rgba(0,0,0,0.75);
 }
 
 .ship-icon {
@@ -143,6 +145,16 @@ h1 {
 
 .struken {
     text-decoration: line-through;
+}
+
+button {
+	background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font-family: inherit;
+	cursor: pointer;
+	outline: inherit;
 }
 
 /* font-family: 'Roboto', sans-serif;
