@@ -189,7 +189,8 @@ export default class Game extends Component {
                 done: null,
                 searchingdir: false,
                 active: false
-            }
+            },
+            winner: null
         }
         this.startPlacement = this.startPlacement.bind(this)
         this.placeShip = this.placeShip.bind(this)
@@ -197,7 +198,7 @@ export default class Game extends Component {
         this.startGame = this.startGame.bind(this)
         this.playerFire = this.playerFire.bind(this)
     }
-    
+
     // Update gamestate and start placement of player's ships
     startPlacement = (e) => {
         this.setState({
@@ -564,13 +565,12 @@ export default class Game extends Component {
                     hit: false
                 })
             }
-            this.setState({
-                turn: 1
-            }, this.NPCFire)
             if (!this.state.NPCMatrix.includes(1) || !this.state.playerMatrix.includes(1)) {
+                this.gameOver('Player')
+            } else {
                 this.setState({
-                    gamestage: 'gameover'
-                })
+                    turn: 1
+                }, this.NPCFire)
             }
         }
     }
@@ -583,7 +583,7 @@ export default class Game extends Component {
             let position
 
             if (this.state.NPCHitInfo.hit === true || this.state.NPCHitInfo.searchingdir === true) {
-                position = this.NPCAi()
+                position = this.NPCSmartHit()
             } else {
                 position = Math.floor(Math.random() * 90)
             }
@@ -642,19 +642,17 @@ export default class Game extends Component {
                 turn: 0
             })
             if (!this.state.NPCMatrix.includes(1) || !this.state.playerMatrix.includes(1)) {
-                this.setState({
-                    gamestage: 'gameover'
-                })
+                this.gameOver('NPC')
             }
         }
     }
 
-    // NPC Ai to be used if NPC hits a shot
-    NPCAi() {
+    // NPC Smart Hit function to be used if NPC hits a shot
+    NPCSmartHit() {
         let NPCHitInfo = this.state.NPCHitInfo
         let directions = ['up', 'right', 'down', 'left']
         let position = NPCHitInfo.position
-        
+
         if (NPCHitInfo.active === true && NPCHitInfo.hit === true) {
             NPCHitInfo.dirconfirmed = true
         }
@@ -682,6 +680,20 @@ export default class Game extends Component {
             NPCHitInfo: NPCHitInfo
         })
         return position
+    }
+
+    gameOver(winner) {
+        this.setState({
+            gamestage: 'gameover',
+            winner: winner
+        })
+        let squares = document.querySelectorAll('.npc .square')
+        let matrix = this.state.NPCMatrix
+        squares.forEach((sqr, i) => {
+            if (matrix[i] === 1) {
+                sqr.firstChild.classList.add('placed')
+            }
+        })
     }
 
     render() {
@@ -777,7 +789,9 @@ export default class Game extends Component {
                 break;
             case 'gameover':
                 infotxt = <h2>Game Over</h2>
-                additional = <form action="/"><button className="controlbtn"><h2>Restart game</h2></button></form>
+                additional = (<div><h1>The winner is {this.state.winner}</h1>
+                    <form action="/"><button className="controlbtn"><h2>Restart game</h2></button></form>
+                </div>)
                 break;
             default: break
         }
