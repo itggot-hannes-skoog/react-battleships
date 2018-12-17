@@ -734,6 +734,7 @@ export default class Game extends Component {
                 additional = (
                     <div>
                         <h4>{this.state.turn === 1 ? 'Player' : 'NPC'} {this.state.hit === true ? 'hit!' : 'missed!'}</h4>
+                        <h3>Your ships</h3>
                         {this.state.playerships.map((ship, i) => {
                             switch (ship.name) {
                                 case 'Carrier':
@@ -776,7 +777,7 @@ export default class Game extends Component {
                 break;
             case 'gameover':
                 infotxt = <h2>Game Over</h2>
-                additional = <form action="/"><button className="controlbtn"><h3>Restart game</h3></button></form>
+                additional = <form action="/"><button className="controlbtn"><h2>Restart game</h2></button></form>
                 break;
             default: break
         }

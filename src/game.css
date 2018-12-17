@@ -133,6 +133,14 @@ h1 {
     height: 100%;
 }
 
+.info > h2 {
+    margin-bottom: 2rem;
+}
+
+.info div h4 {
+    margin: 1rem 0;
+}
+
 .shipstate div {
     height: 100%;
     width: 100%;
